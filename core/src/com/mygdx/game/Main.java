@@ -91,6 +91,7 @@ public class Main extends ApplicationAdapter {
 			public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
 				super.touchUp(event, x, y, pointer, button);
 				System.out.println("not yet implemented");
+				System.out.println("this is a git test");
 			}
 		});
 
