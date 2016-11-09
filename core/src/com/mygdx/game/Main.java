@@ -11,10 +11,7 @@ public class Main extends Game {
 	public static final int screenWidth = 1280;
 	public static final int screenHeight = 960;
 
-
 	Viewport viewport;
-
-
 
 	@Override
 	public void create () {
