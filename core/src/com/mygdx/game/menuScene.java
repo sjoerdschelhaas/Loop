@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -35,8 +36,7 @@ public class MenuScene extends BaseScene {
     Sprite background;
     Image logo;
 
-    OrthographicCamera camera;
-    Viewport viewport;
+
 
     BitmapFont fontHighScore;
     BitmapFont fontScore;
@@ -46,25 +46,32 @@ public class MenuScene extends BaseScene {
     float counter = 0;
 
     Stage stage;
-    Main game;
+    Main g;
 
     boolean canAnim = true;
 
-    public MenuScene(Main g) {
-        super(g);
+    public MenuScene(Main game) {
+        super(game);
 
-        game = g;
+        g = game;
 
-        camera = new OrthographicCamera(g.screenWidth, g.screenHeight);
-        camera.position.set(g.screenWidth / 2, g.screenHeight / 2, 0);
-        viewport = new FillViewport(g.screenWidth, g.screenHeight, camera);
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        batch = new SpriteBatch();
+
 
         background = new Sprite(new Texture("background.jpg"));
 
         stage = new Stage();
-        stage.setViewport(viewport);
+        stage.setViewport(g.viewport);
+
 
         Gdx.input.setInputProcessor(stage);
+
+
 
         fontHighScore = new BitmapFont(Gdx.files.internal("scoreFont.fnt"));
         fontHighScore.setColor(Color.BLACK); // TODO change color
@@ -200,21 +207,17 @@ public class MenuScene extends BaseScene {
             }
         });
 
-
         stage.addActor(imPlay);
         stage.addActor(imExit);
         stage.addActor(imStar);
         stage.addActor(imSettings);
         stage.addActor(logo);
-
-
     }
 
     @Override
-    public void show() {
-        super.show();
-        batch = new SpriteBatch();
-
+    public void resume() {
+        super.resume();
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
@@ -224,13 +227,13 @@ public class MenuScene extends BaseScene {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         stage.act(delta);
-        batch.setProjectionMatrix(camera.combined);
+        batch.setProjectionMatrix(g.camera.combined);
 
         batch.begin();
         background.draw(batch);
         //logo.draw(batch);
-        fontHighScore.draw(batch, "HighScore", game.screenWidth / 2 - (textWidthHighScore / 2), game.screenHeight * 0.58f);
-        fontScore.draw(batch, "99", game.screenWidth / 2 - (textWidthScore / 2), game.screenHeight * 0.52f);
+        fontHighScore.draw(batch, "HighScore", g.screenWidth / 2 - (textWidthHighScore / 2), g.screenHeight * 0.58f);
+        fontScore.draw(batch, "99", g.screenWidth / 2 - (textWidthScore / 2), g.screenHeight * 0.52f);
 
         batch.end();
 
@@ -252,7 +255,6 @@ public class MenuScene extends BaseScene {
     }
 
     public void update(float delta) {
-
         if (canAnim) {
             counter += delta;
             if (counter > 1.5) {

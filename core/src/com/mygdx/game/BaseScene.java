@@ -17,8 +17,8 @@ public class BaseScene extends ScreenAdapter{
         game = g;
         keyHandled = false;
 
-        Gdx.input.setCatchBackKey(true);
-        Gdx.input.setCatchMenuKey(true);
+       Gdx.input.setCatchBackKey(true);
+       Gdx.input.setCatchMenuKey(true);
 
     }
 
