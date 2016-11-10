@@ -10,10 +10,10 @@ import com.badlogic.gdx.ScreenAdapter;
 
 public class BaseScene extends ScreenAdapter{
 
-    private Main game;
+    private Loop game;
     private  boolean keyHandled;
 
-    public BaseScene(Main g) {
+    public BaseScene(Loop g) {
         game = g;
         keyHandled = false;
 

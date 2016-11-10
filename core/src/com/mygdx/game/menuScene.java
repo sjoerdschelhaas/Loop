@@ -1,10 +1,8 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -19,8 +17,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
  * Created by wietze on 11/8/2016.
@@ -46,11 +42,11 @@ public class MenuScene extends BaseScene {
     float counter = 0;
 
     Stage stage;
-    Main g;
+    Loop g;
 
     boolean canAnim = true;
 
-    public MenuScene(Main game) {
+    public MenuScene(Loop game) {
         super(game);
 
         g = game;
@@ -62,12 +58,10 @@ public class MenuScene extends BaseScene {
         super.show();
         batch = new SpriteBatch();
 
-
         background = new Sprite(new Texture("background.jpg"));
 
         stage = new Stage();
         stage.setViewport(g.viewport);
-
 
         Gdx.input.setInputProcessor(stage);
 
@@ -88,6 +82,67 @@ public class MenuScene extends BaseScene {
         Color c2 = fontScore.getColor();
         fontScore.setColor(c2.r, c2.g, c2.b, 0);
 
+        initButtons();
+
+
+
+
+    }
+
+    @Override
+    public void resume() {
+        super.resume();
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    @Override
+    public void render(float delta) {
+        super.render(delta);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        batch.setProjectionMatrix(g.camera.combined);
+        stage.act(delta);
+
+
+        batch.begin();
+        background.draw(batch);
+        fontHighScore.draw(batch, "HighScore", g.screenWidth / 2 - (textWidthHighScore / 2), g.screenHeight * 0.58f);
+        fontScore.draw(batch, "99", g.screenWidth / 2 - (textWidthScore / 2), g.screenHeight * 0.52f);
+
+        batch.end();
+
+        stage.draw();
+
+        update(delta);
+
+    }
+
+    public boolean addTransText(BitmapFont f, float alpha) {
+        Color c = f.getColor();
+        if (f.getColor().a > 0.99) {
+            f.setColor(c.r, c.g, c.b, 1);
+            return false;
+        }
+        f.setColor(c.r, c.g, c.b, c.a + alpha);
+        return true;
+
+    }
+
+    public void update(float delta) {
+        if (canAnim) {
+            counter += delta;
+            if (counter > 1.5) {
+                canAnim = addTransText(fontHighScore, 0.009f);
+                canAnim = addTransText(fontScore, 0.009f);
+            }
+        }
+    }
+    @Override
+    protected void handleBackPress() {
+        super.handleBackPress();
+        System.out.println("Not implemented yet");
+    }
+    public void initButtons(){
         Texture t = new Texture("menulogo.png");
         logo = new Image();
         logo.setDrawable(new TextureRegionDrawable(new TextureRegion(t)));
@@ -126,6 +181,7 @@ public class MenuScene extends BaseScene {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
+                g.setScreen(new GameScene(g));
 
             }
         });
@@ -212,61 +268,6 @@ public class MenuScene extends BaseScene {
         stage.addActor(imStar);
         stage.addActor(imSettings);
         stage.addActor(logo);
-    }
-
-    @Override
-    public void resume() {
-        super.resume();
-        Gdx.input.setInputProcessor(stage);
-    }
-
-    @Override
-    public void render(float delta) {
-        super.render(delta);
-        Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        stage.act(delta);
-        batch.setProjectionMatrix(g.camera.combined);
-
-        batch.begin();
-        background.draw(batch);
-        //logo.draw(batch);
-        fontHighScore.draw(batch, "HighScore", g.screenWidth / 2 - (textWidthHighScore / 2), g.screenHeight * 0.58f);
-        fontScore.draw(batch, "99", g.screenWidth / 2 - (textWidthScore / 2), g.screenHeight * 0.52f);
-
-        batch.end();
-
-        stage.draw();
-
-        update(delta);
-
-    }
-
-    public boolean addTransText(BitmapFont f, float alpha) {
-        Color c = f.getColor();
-        if (f.getColor().a > 0.99) {
-            f.setColor(c.r, c.g, c.b, 1);
-            return false;
-        }
-        f.setColor(c.r, c.g, c.b, c.a + alpha);
-        return true;
-
-    }
-
-    public void update(float delta) {
-        if (canAnim) {
-            counter += delta;
-            if (counter > 1.5) {
-                canAnim = addTransText(fontHighScore, 0.009f);
-                canAnim = addTransText(fontScore, 0.009f);
-            }
-        }
-    }
-    @Override
-    protected void handleBackPress() {
-        super.handleBackPress();
-        System.out.println("Not implemented yet");
     }
 
     @Override

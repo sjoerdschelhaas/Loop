@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class Main extends Game {
+public class Loop extends Game {
 
 	OrthographicCamera camera;
 	public static final int screenWidth = 1280;
