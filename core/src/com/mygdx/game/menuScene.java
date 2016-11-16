@@ -32,8 +32,6 @@ public class MenuScene extends BaseScene {
     Sprite background;
     Image logo;
 
-
-
     BitmapFont fontHighScore;
     BitmapFont fontScore;
     GlyphLayout layout;
@@ -76,7 +74,7 @@ public class MenuScene extends BaseScene {
 
 
         fontScore = new BitmapFont(Gdx.files.internal("scoreFont2.fnt"));
-        fontScore.setColor(Color.DARK_GRAY); // TODO change color
+        fontScore.setColor(Color.DARK_GRAY);
         layout = new GlyphLayout(fontScore, "99");
         textWidthScore = layout.width;
         Color c2 = fontScore.getColor();
@@ -85,15 +83,8 @@ public class MenuScene extends BaseScene {
         initButtons();
 
 
-
-
     }
 
-    @Override
-    public void resume() {
-        super.resume();
-        Gdx.input.setInputProcessor(stage);
-    }
 
     @Override
     public void render(float delta) {
@@ -181,6 +172,7 @@ public class MenuScene extends BaseScene {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
+                Gdx.input.setInputProcessor(null);
                 g.setScreen(new GameScene(g));
 
             }

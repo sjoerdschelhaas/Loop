@@ -19,8 +19,6 @@ public class Loop extends Game {
 		camera = new OrthographicCamera();
 		camera.position.set(screenWidth/2,screenHeight/2,0);
 		viewport = new FillViewport(screenWidth,screenHeight,camera);
-		viewport = new FillViewport(screenWidth,screenHeight,camera);
-
 
 		setScreen(new MenuScene(this));
 	}
