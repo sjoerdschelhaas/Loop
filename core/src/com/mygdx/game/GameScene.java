@@ -19,17 +19,27 @@ import java.util.Iterator;
 
 public class GameScene extends BaseScene {
 
+    boolean canAddBall = true;
+    float timeOneSpin = 6.7f;
+
     SpriteBatch batch;
     Sprite background;
     Vector3 touchPos;
     CatmullRomSpline<Vector2> myCatmull;
 
-    float minTime = 3f;
+    float score = 0;
+    float spawnSpeedMin = 2f;
+    float spawnSpeedMax = 4.5f;
+
+    float minTime = 0f;
+    float wallspeed = 4;
+    float spawnSpeed = 0;
     ArrayList<Ball> balls;
     ArrayList<Wall> walls;
 
     float counter = 0;
     Loop game;
+
 
     public GameScene(Loop g){
         super(g);
@@ -106,32 +116,76 @@ public class GameScene extends BaseScene {
         if(Gdx.input.isTouched()){
             touchPos.set(Gdx.input.getX(),Gdx.input.getY(),0);
             game.camera.unproject(touchPos);
-            Iterator<Wall> iter = walls.iterator();
 
-            while(iter.hasNext()){
-                Wall w = iter.next();
-                w.setSpeed(1.2f);
-                w.update();
+            if(touchPos.x>game.screenWidth/2){
+                spawnSpeed = MathUtils.random(spawnSpeedMin,spawnSpeedMax) * 0.5f;
+                Iterator<Wall> iter = walls.iterator();
 
+                while(iter.hasNext()){
+                    Wall w = iter.next();
+                    w.setSpeed(wallspeed *1.8f);
+                    w.update();
+
+                }
+            }else{
+                spawnSpeed = MathUtils.random(spawnSpeedMin,spawnSpeedMax) * 2f;
+                Iterator<Wall> iter = walls.iterator();
+
+                while(iter.hasNext()){
+                    Wall w = iter.next();
+                    w.setSpeed(wallspeed *0.5f);
+                    w.update();
+
+                }
             }
+
         }else {
+            spawnSpeed = MathUtils.random(spawnSpeedMin,spawnSpeedMax);
             Iterator<Wall> iter = walls.iterator();
 
             while(iter.hasNext()){
                 Wall w = iter.next();
-                w.setSpeed(1.5f);
+                w.setSpeed(wallspeed);
                 w.update();
             }
         }
 
-
         counter += delta;
-        if(counter > MathUtils.random() * 1.7 +minTime){ //TODO Play around with these numbers
+        if(counter > spawnSpeed +minTime){ //TODO Remove wall if outside screen
             walls.add(new Wall(game));
             counter = 0;
         }
 
+        System.out.println(balls.get(0).getPos());
+        System.out.println(counter);
+        Iterator<Ball> iter = balls.iterator();
 
+        while(iter.hasNext()){
+            Ball b = iter.next();
+            if(b.getPos().x<(game.screenWidth /2) +3 && b.getPos().x > (game.screenWidth/2) -3&& b.canScore){
+                score++;
+                b.canScore = false;
+            }else {
+                b.canScore = true;
+            }
+        }
+
+
+        if(score == 1){
+            if(canAddBall){
+                balls.add(new Ball(myCatmull));
+                canAddBall = false;
+            }
+        }
+        if(score >1 && score <3)
+            canAddBall=true;
+
+        if(score == 3){
+            if(canAddBall){
+                balls.add(new Ball(myCatmull));
+                canAddBall = false;
+            }
+        }
 
     }
     @Override
@@ -145,3 +199,4 @@ public class GameScene extends BaseScene {
         super.handleBackPress();
     }
 }
+

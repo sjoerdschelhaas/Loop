@@ -13,8 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Ball {
 
-    Vector2 startPos = new Vector2(145,479);
-
+    boolean canScore = true;
     Sprite ball;
 
     CatmullRomSpline<Vector2> myCatmull;

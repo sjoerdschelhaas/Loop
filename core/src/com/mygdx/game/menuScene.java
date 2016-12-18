@@ -42,6 +42,7 @@ public class MenuScene extends BaseScene {
     Stage stage;
     Loop g;
 
+
     boolean canAnim = true;
 
     public MenuScene(Loop game) {

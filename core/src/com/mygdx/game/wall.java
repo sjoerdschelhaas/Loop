@@ -14,7 +14,8 @@ public class Wall {
 
 
 
-    float speed = 1.5f;
+    private float speed = 4f;
+
 
     public void setSpeed(float speed) {
         this.speed = speed;
