@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.CatmullRomSpline;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 
 /**
@@ -13,7 +14,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Ball {
 
-    boolean canScore = true;
+    private Circle boundingCircle;
     Sprite ball;
 
     CatmullRomSpline<Vector2> myCatmull;
@@ -25,8 +26,13 @@ public class Ball {
     public Ball(CatmullRomSpline cm) {
         myCatmull = cm;
         ball = new Sprite(new Texture("ball.png"));
+        boundingCircle = new Circle();
     }
 
+
+    public Circle getBoundingCircle(){
+        return boundingCircle;
+    }
 
     public void draw(Batch batch){
         myCatmull.derivativeAt(out, current);
@@ -35,6 +41,8 @@ public class Ball {
             current -=1;
         }
         myCatmull.valueAt(out,current);
+
+        boundingCircle.set(out.x, out.y, ball.getWidth()/2-2);
         batch.draw(ball,out.x-ball.getHeight()/2,out.y-ball.getHeight()/2);
     }
 

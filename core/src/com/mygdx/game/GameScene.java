@@ -8,7 +8,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.CatmullRomSpline;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -22,8 +24,10 @@ import java.util.Iterator;
 
 public class GameScene extends BaseScene {
 
-    boolean canAddBall = true;
+    //TODO Remove when release
+    ShapeRenderer shapeRenderer = new ShapeRenderer();
 
+    boolean canAddBall = true;
 
     SpriteBatch batch;
     Sprite background;
@@ -34,8 +38,8 @@ public class GameScene extends BaseScene {
     float spawnSpeedMin = 3f;
     float spawnSpeedMax = 5f;
 
-    float minTime = 0f;
-    float wallspeed = 4;
+
+    float wallspeed = 3.5f;
     float spawnSpeed = 0;
     ArrayList<Ball> balls;
     ArrayList<Wall> walls;
@@ -43,7 +47,6 @@ public class GameScene extends BaseScene {
     float counter = 0;
     float scoreCounter = 0;
     Loop game;
-    int spawnFreq = 0;
     int maxBalls = 3;
     int maxSpeed = 20;
 
@@ -117,6 +120,8 @@ public class GameScene extends BaseScene {
             Ball b = iter.next();
             b.draw(batch);
         }
+
+
         Iterator<Wall> wallIter = walls.iterator();
 
         while (wallIter.hasNext()) {
@@ -125,9 +130,30 @@ public class GameScene extends BaseScene {
 
 
         }
-
         fontScore.draw(batch, "Score: " + (int)score, game.screenWidth *0.8f - (textWidthScore / 2), game.screenHeight * 0.9f);
         batch.end();
+
+        // TODO remove later
+        shapeRenderer.setProjectionMatrix(game.camera.combined);
+        Iterator<Ball> renderBallIter = balls.iterator();
+        while (renderBallIter.hasNext()) {
+            Ball b = renderBallIter.next();
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.circle(b.getBoundingCircle().x, b.getBoundingCircle().y, b.getBoundingCircle().radius);
+            shapeRenderer.end();
+        }
+
+        Iterator<Wall> renderWallIter = walls.iterator();
+        while (renderWallIter.hasNext()) {
+            Wall b = renderWallIter.next();
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(Color.BLUE);
+            shapeRenderer.rect(b.getBoundingRec().x, b.getBoundingRec().y,b.getBoundingRec().getWidth(),b.getBoundingRec().getHeight());
+            shapeRenderer.end();
+        }
+
+
 
         update(delta);
     }
@@ -171,7 +197,7 @@ public class GameScene extends BaseScene {
         }
 
         counter += delta;
-        if (counter > spawnSpeed + minTime) {
+        if (counter > spawnSpeed) {
             walls.add(new Wall(game));
             counter = 0;
         }
@@ -208,7 +234,23 @@ public class GameScene extends BaseScene {
             canAddBall = false;
             scoreLim += MathUtils.random(minScoreLim+200,maxScoreLim + 500);
         }
-        System.out.println(score);
+
+
+        // TODO add collision here
+        Iterator<Ball> collItter = balls.iterator();
+        while(collItter.hasNext()){
+            Ball b = collItter.next();
+            Iterator<Wall> collWallIter = walls.iterator();
+            while (collWallIter.hasNext()){
+                Wall w = collWallIter.next();
+                if(Intersector.overlaps(b.getBoundingCircle(),w.getBoundingRec())){
+                    score = 0;
+                }
+            }
+
+
+        }
+
     }
         @Override
         public void resize ( int width, int height){
