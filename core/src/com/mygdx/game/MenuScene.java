@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -31,6 +32,9 @@ public class MenuScene extends BaseScene {
     SpriteBatch batch;
     Sprite background;
     Image logo;
+
+    FreeTypeFontGenerator generator;
+    FreeTypeFontGenerator.FreeTypeFontParameter parameter;
 
     BitmapFont fontHighScore;
     BitmapFont fontScore;
@@ -61,12 +65,16 @@ public class MenuScene extends BaseScene {
 
         stage = new Stage();
         stage.setViewport(g.viewport);
-
         Gdx.input.setInputProcessor(stage);
 
 
+        generator = new FreeTypeFontGenerator(Gdx.files.internal("DroidSerif-Bold.ttf"));
+        parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
 
-        fontHighScore = new BitmapFont(Gdx.files.internal("scoreFont.fnt"));
+
+        parameter.size = 48;
+
+        fontHighScore = generator.generateFont(parameter);
         fontHighScore.setColor(Color.BLACK); // TODO change color
         layout = new GlyphLayout(fontHighScore, "Highscore");
         textWidthHighScore = layout.width;
@@ -74,7 +82,7 @@ public class MenuScene extends BaseScene {
         fontHighScore.setColor(c.r, c.g, c.b, 0);
 
 
-        fontScore = new BitmapFont(Gdx.files.internal("scoreFont2.fnt"));
+        fontScore = generator.generateFont(parameter);
         fontScore.setColor(Color.DARK_GRAY);
         layout = new GlyphLayout(fontScore, "99");
         textWidthScore = layout.width;

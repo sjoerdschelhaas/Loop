@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -27,35 +28,30 @@ public class GameScene extends BaseScene {
     //TODO Remove when release
     ShapeRenderer shapeRenderer = new ShapeRenderer();
 
-    boolean canAddBall = true;
-
     SpriteBatch batch;
     Sprite background;
     Vector3 touchPos;
     CatmullRomSpline<Vector2> myCatmull;
 
     float score = 0;
-    float spawnSpeedMin = 3f;
-    float spawnSpeedMax = 5f;
+    private ParticleEffect effect;
 
+    float maxHoleSize = 300;
+    float minHoleSize = 80;
 
-    float wallspeed = 3.5f;
-    float spawnSpeed = 0;
-    ArrayList<Ball> balls;
-    ArrayList<Wall> walls;
+    // if the ball is moving left
+    boolean left = true;
 
-    float counter = 0;
-    float scoreCounter = 0;
+    Ball ball;
+    ArrayList<WallSet> walls;
+
     Loop game;
-    int maxBalls = 3;
-    int maxSpeed = 20;
+
 
     BitmapFont fontScore;
     GlyphLayout layout;
     float textWidthScore;
-    int scoreLim = 0;
-    int minScoreLim = 0;
-    int maxScoreLim = 1;
+
 
     public GameScene(Loop g) {
         super(g);
@@ -71,13 +67,19 @@ public class GameScene extends BaseScene {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         setup();
 
+
         touchPos = new Vector3();
 
         background = new Sprite(new Texture("infin.jpg"));
-        balls = new ArrayList<Ball>();
 
-        walls = new ArrayList<Wall>();
+        walls = new ArrayList<WallSet>();
 
+        effect = new ParticleEffect();
+
+        ball = new Ball(myCatmull);
+        spawnSetOfWalls();
+
+        // TODO change to freetype
         fontScore = new BitmapFont(Gdx.files.internal("scoreFont3.fnt"));
         fontScore.setColor(Color.BLACK);
         fontScore.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -114,44 +116,35 @@ public class GameScene extends BaseScene {
         batch.setProjectionMatrix(game.camera.combined);
         batch.begin();
         background.draw(batch);
-        Iterator<Ball> iter = balls.iterator();
 
-        while (iter.hasNext()) {
-            Ball b = iter.next();
-            b.draw(batch);
+
+        ball.draw(batch);
+
+
+        Iterator<WallSet> wallSetIter = walls.iterator();
+        while (wallSetIter.hasNext()){
+            WallSet ws = wallSetIter.next();
+            Iterator<Wall> wallIter = ws.getWallSet().iterator();
+            while (wallIter.hasNext()) {
+                Wall w = wallIter.next();
+                w.draw(batch);
+
+            }
         }
 
+        fontScore.draw(batch, "Score: " + (int) score, game.screenWidth * 0.8f - (textWidthScore / 2), game.screenHeight * 0.9f);
 
-        Iterator<Wall> wallIter = walls.iterator();
+        effect.draw(batch,delta);
 
-        while (wallIter.hasNext()) {
-            Wall w = wallIter.next();
-            w.draw(batch);
-
-
-        }
-        fontScore.draw(batch, "Score: " + (int)score, game.screenWidth *0.8f - (textWidthScore / 2), game.screenHeight * 0.9f);
         batch.end();
 
         // TODO remove later
         shapeRenderer.setProjectionMatrix(game.camera.combined);
-        Iterator<Ball> renderBallIter = balls.iterator();
-        while (renderBallIter.hasNext()) {
-            Ball b = renderBallIter.next();
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(Color.RED);
-            shapeRenderer.circle(b.getBoundingCircle().x, b.getBoundingCircle().y, b.getBoundingCircle().radius);
-            shapeRenderer.end();
-        }
-
-        Iterator<Wall> renderWallIter = walls.iterator();
-        while (renderWallIter.hasNext()) {
-            Wall b = renderWallIter.next();
-            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(Color.BLUE);
-            shapeRenderer.rect(b.getBoundingRec().x, b.getBoundingRec().y,b.getBoundingRec().getWidth(),b.getBoundingRec().getHeight());
-            shapeRenderer.end();
-        }
+        Ball b = ball;
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.circle(b.getBoundingCircle().x, b.getBoundingCircle().y, b.getBoundingCircle().radius);
+        shapeRenderer.end();
 
 
 
@@ -159,109 +152,122 @@ public class GameScene extends BaseScene {
     }
 
     public void update(float delta) {
+
         if (Gdx.input.isTouched()) {
             touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             game.camera.unproject(touchPos);
 
             if (touchPos.x > game.screenWidth / 2) {
-                spawnSpeed = MathUtils.random(spawnSpeedMin, spawnSpeedMax) * 0.5f;
-                Iterator<Wall> iter = walls.iterator();
+                ball.speed = 17;
 
-                while (iter.hasNext()) {
-                    Wall w = iter.next();
-                    w.setSpeed(wallspeed * 1.8f);
-                    w.update();
+                // TODO cant have unlimitied boost?
 
-                }
-            } else {
-                spawnSpeed = MathUtils.random(spawnSpeedMin, spawnSpeedMax) * 2f;
-                Iterator<Wall> iter = walls.iterator();
-
-                while (iter.hasNext()) {
-                    Wall w = iter.next();
-                    w.setSpeed(wallspeed * 0.25f);
-                    w.update();
-                }
-
+            }else{
+                ball.speed = 3;
             }
-
         } else {
-            spawnSpeed = MathUtils.random(spawnSpeedMin, spawnSpeedMax);
-            Iterator<Wall> iter = walls.iterator();
+            ball.speed = 10;
+        }
 
-            while (iter.hasNext()) {
-                Wall w = iter.next();
-                w.setSpeed(wallspeed);
-                w.update();
+
+
+
+        Iterator<WallSet> wallSetIter = walls.iterator();
+        while (wallSetIter.hasNext()){
+            WallSet ws = wallSetIter.next();
+
+            Iterator<Wall> wallIter = ws.getWallSet().iterator();
+            while (wallIter.hasNext()) {
+                Wall w = wallIter.next();
+                w.update(left);
+                //Remove wall when out of screen
+
+            }
+            if (ws.getXPos() < -10 || ws.getXPos() > game.screenWidth){
+                wallSetIter.remove();
             }
         }
 
-        counter += delta;
-        if (counter > spawnSpeed) {
-            walls.add(new Wall(game));
-            counter = 0;
+
+        if(walls.size() == 0){
+            spawnSetOfWalls();
         }
 
-        Iterator<Wall> wallitter = walls.iterator();
-        while (wallitter.hasNext()) {
-            Wall w = wallitter.next();
-            if (w.wall.getY() > 1000) {
-                walls.remove(w);
-            }
-        }
-        scoreCounter = scoreCounter + delta;
-        if(scoreCounter > 0.11f){
-            score++;
-            scoreCounter = 0;
-            canAddBall = true;
-        }
-
-        if (score % 12 == 0) {
-            Iterator<Ball> Biter = balls.iterator();
-            while (Biter.hasNext()) {
-                Ball b = Biter.next();
-                if(!(b.speed >= maxSpeed)){
-                    b.speed+=0.2f;
-                }
+        // TODO Make game harder by making walls go faster and reducing the holes
 
 
-            }
-        }
-
-        if (score > scoreLim && canAddBall && balls.size() < maxBalls){
-            Ball b = new Ball(myCatmull);
-            balls.add(b);
-            canAddBall = false;
-            scoreLim += MathUtils.random(minScoreLim+200,maxScoreLim + 500);
-        }
-
-
-        // TODO add collision here
-        Iterator<Ball> collItter = balls.iterator();
-        while(collItter.hasNext()){
-            Ball b = collItter.next();
-            Iterator<Wall> collWallIter = walls.iterator();
-            while (collWallIter.hasNext()){
+        //******************
+        // collision
+        //******************
+        Iterator<WallSet> collWallSetIter = walls.iterator();
+        while (collWallSetIter.hasNext()){
+            WallSet ws = collWallSetIter.next();
+            Iterator<Wall> collWallIter = ws.getWallSet().iterator();
+            while (collWallIter.hasNext()) {
                 Wall w = collWallIter.next();
-                if(Intersector.overlaps(b.getBoundingCircle(),w.getBoundingRec())){
+                if (Intersector.overlaps(ball.getBoundingCircle(), w.getBoundingRec())) {
+                    // TODO restart game, show particles, reset score
                     score = 0;
+                    System.out.println("Collision");
+
+
+                    // second argument is the locaiton the for the particle image
+                    effect.load(Gdx.files.internal("particle.p"),Gdx.files.internal(""));
+                    effect.start();
+
+                    effect.setPosition(ball.getPos().x,ball.getPos().y);
+                    System.out.println(Gdx.graphics.getWidth()/2 +", " +  Gdx.graphics.getHeight()/2);
+
                 }
+
             }
-
-
         }
+
+
 
     }
-        @Override
-        public void resize ( int width, int height){
-            super.resize(width, height);
 
+
+    public void spawnSetOfWalls(){
+        WallSet wallSet;
+
+        if(ball.getPos().x <= game.screenWidth/2){
+            float x = game.screenWidth;
+            float y = 200;
+
+            wallSet = new WallSet();
+            for (int i = 0; i < 2; i++) {
+                wallSet.add(new Wall(game,x,y));
+                y = y + Wall.wallHeight + MathUtils.random(minHoleSize,maxHoleSize);
+                left = true;
+
+            }
+        }else {
+            float x = 0;
+            float y = 200;
+
+            wallSet = new WallSet();
+            for (int i = 0; i < 2; i++) {
+                wallSet.add(new Wall(game, x, y));
+                y = y + Wall.wallHeight + MathUtils.random(minHoleSize, maxHoleSize);
+                left = false;
+            }
         }
 
-        @Override
-        protected void handleBackPress () {
-            super.handleBackPress();
-        }
+        walls.add(wallSet);
+
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+
+    }
+
+    @Override
+    protected void handleBackPress() {
+        super.handleBackPress();
+    }
 }
 
 
