@@ -20,8 +20,8 @@ timeline0: 0.0
 - Life - 
 lowMin: 0.0
 lowMax: 0.0
-highMin: 1000.0
-highMax: 1000.0
+highMin: 700.0
+highMax: 700.0
 relative: false
 scalingCount: 3
 scaling0: 1.0
@@ -62,8 +62,8 @@ timeline0: 0.0
 - Scale - 
 lowMin: 0.0
 lowMax: 0.0
-highMin: 6.0
-highMax: 6.0
+highMin: 10.0
+highMax: 10.0
 relative: false
 scalingCount: 1
 scaling0: 1.0
@@ -152,4 +152,4 @@ additive: true
 behind: false
 premultipliedAlpha: false
 - Image Path -
-particle.png
+ball.png

@@ -10,14 +10,14 @@ import com.badlogic.gdx.math.Rectangle;
  */
 
 public class Wall {
-    Sprite border;
+
     Sprite wall;
 
     private Rectangle boundingRec;
 
+    static float wallHeight;
 
-
-    private float speed = 4f;
+    float speed = 4f;
 
 
     public Rectangle getBoundingRec(){
@@ -28,26 +28,30 @@ public class Wall {
         this.speed = speed;
     }
 
-    public Wall(Loop g){
-        border = new Sprite(new Texture("border.png"));
-        wall = new Sprite(new Texture("wall.png"));
+    public Wall(Loop g,float x, float y){
 
-        border.setPosition(g.screenWidth / 2 - border.getWidth() /2,g.screenHeight);
-        wall.setPosition(g.screenWidth / 2 - wall.getWidth() /2,g.screenHeight);
+        wall = new Sprite(new Texture("verWall.png"));
+        wallHeight = wall.getHeight();
+
+        wall.setPosition(x,y);
 
         boundingRec = new Rectangle();
     }
 
-    public void  update(){
-        border.setPosition(border.getX(),border.getY() - speed);
-        wall.setPosition(wall.getX(),wall.getY() - speed);
+    public void  update(boolean left){
+        if (left){
+            wall.setPosition(wall.getX()-speed,wall.getY());
+        }else{
+            wall.setPosition(wall.getX()+speed,wall.getY());
+        }
 
-        boundingRec.set(wall.getX(),wall.getY()-speed,border.getWidth(),border.getHeight());
+
+     //   boundingRec.set(wall.getX(),wall.getY()-speed,wall.getWidth(),wall.getHeight());
+        boundingRec.set(wall.getBoundingRectangle());
 
     }
 
     public void draw(Batch batch) {
         wall.draw(batch);
-        border.draw(batch);
     }
 }
