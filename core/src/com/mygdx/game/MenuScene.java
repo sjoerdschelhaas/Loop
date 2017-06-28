@@ -274,7 +274,7 @@ public class MenuScene extends BaseScene {
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
-
+        g.viewport.update(width,height,true);
     }
 }
 

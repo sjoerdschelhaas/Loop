@@ -9,12 +9,16 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.CatmullRomSpline;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,8 +29,6 @@ import java.util.Iterator;
 
 public class GameScene extends BaseScene {
 
-    //TODO Remove when release
-    ShapeRenderer shapeRenderer = new ShapeRenderer();
 
     SpriteBatch batch;
     Sprite background;
@@ -34,11 +36,14 @@ public class GameScene extends BaseScene {
     CatmullRomSpline<Vector2> myCatmull;
 
     float score = 0;
+    float deltaScore = 0;
+
     private ParticleEffect effect;
 
     float maxHoleSize = 300;
-    float minHoleSize = 80;
+    float minHoleSize = 140;
 
+    float currentWallSpeed = 4;
     // if the ball is moving left
     boolean left = true;
 
@@ -47,15 +52,31 @@ public class GameScene extends BaseScene {
 
     Loop game;
 
+    GameState gameState;
 
+    float maxWallSpeed = 14;
+
+    FreeTypeFontGenerator generator;
+    FreeTypeFontGenerator.FreeTypeFontParameter parameter;
     BitmapFont fontScore;
     GlyphLayout layout;
     float textWidthScore;
+
+    private Hud hud;
+
+
+    public enum GameState {
+        PLAYING,
+        PAUSE,
+        GAMEOVER
+    }
 
 
     public GameScene(Loop g) {
         super(g);
         game = g;
+
+        hud = new Hud(g);
 
     }
 
@@ -79,10 +100,14 @@ public class GameScene extends BaseScene {
         ball = new Ball(myCatmull);
         spawnSetOfWalls();
 
-        // TODO change to freetype
-        fontScore = new BitmapFont(Gdx.files.internal("scoreFont3.fnt"));
-        fontScore.setColor(Color.BLACK);
-        fontScore.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        gameState = GameState.PLAYING;
+
+
+        generator = new FreeTypeFontGenerator(Gdx.files.internal("DroidSerif-Bold.ttf"));
+        parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 48;
+        parameter.color = Color.BLACK;
+        fontScore = generator.generateFont(parameter);
         layout = new GlyphLayout(fontScore, "Score 0");
         textWidthScore = layout.width * 0.5f;
 
@@ -114,15 +139,16 @@ public class GameScene extends BaseScene {
         super.render(delta);
 
         batch.setProjectionMatrix(game.camera.combined);
+
         batch.begin();
         background.draw(batch);
-
+        fontScore.draw(batch, "Score: " + (int) score, game.screenWidth * 0.7f, game.screenHeight * 0.85f);
 
         ball.draw(batch);
 
 
         Iterator<WallSet> wallSetIter = walls.iterator();
-        while (wallSetIter.hasNext()){
+        while (wallSetIter.hasNext()) {
             WallSet ws = wallSetIter.next();
             Iterator<Wall> wallIter = ws.getWallSet().iterator();
             while (wallIter.hasNext()) {
@@ -132,117 +158,121 @@ public class GameScene extends BaseScene {
             }
         }
 
-        fontScore.draw(batch, "Score: " + (int) score, game.screenWidth * 0.8f - (textWidthScore / 2), game.screenHeight * 0.9f);
 
-        effect.draw(batch,delta);
+        effect.draw(batch, delta);
 
         batch.end();
 
-        // TODO remove later
-        shapeRenderer.setProjectionMatrix(game.camera.combined);
-        Ball b = ball;
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.circle(b.getBoundingCircle().x, b.getBoundingCircle().y, b.getBoundingCircle().radius);
-        shapeRenderer.end();
-
-
+        hud.draw();
 
         update(delta);
     }
 
     public void update(float delta) {
 
-        if (Gdx.input.isTouched()) {
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            game.camera.unproject(touchPos);
 
-            if (touchPos.x > game.screenWidth / 2) {
-                ball.speed = 17;
+        if (hud.isPaused())
+            gameState = GameState.PAUSE;
+        else
+            gameState = GameState.PLAYING;
 
-                // TODO cant have unlimitied boost?
 
-            }else{
-                ball.speed = 3;
+        if (gameState == GameState.PLAYING) {
+
+            hardiFy();
+
+            if (Gdx.input.isTouched()) {
+                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+                game.camera.unproject(touchPos);
+
+                if (touchPos.x > game.screenWidth / 2) {
+                    ball.speed = 17;
+
+                } else {
+                    ball.speed = 3;
+                }
+            } else {
+                ball.speed = 10;
             }
-        } else {
-            ball.speed = 10;
-        }
+
+            score += 0.3f;
 
 
+            Iterator<WallSet> wallSetIter = walls.iterator();
+            while (wallSetIter.hasNext()) {
+                WallSet ws = wallSetIter.next();
 
-
-        Iterator<WallSet> wallSetIter = walls.iterator();
-        while (wallSetIter.hasNext()){
-            WallSet ws = wallSetIter.next();
-
-            Iterator<Wall> wallIter = ws.getWallSet().iterator();
-            while (wallIter.hasNext()) {
-                Wall w = wallIter.next();
-                w.update(left);
-                //Remove wall when out of screen
-
-            }
-            if (ws.getXPos() < -10 || ws.getXPos() > game.screenWidth){
-                wallSetIter.remove();
-            }
-        }
-
-
-        if(walls.size() == 0){
-            spawnSetOfWalls();
-        }
-
-        // TODO Make game harder by making walls go faster and reducing the holes
-
-
-        //******************
-        // collision
-        //******************
-        Iterator<WallSet> collWallSetIter = walls.iterator();
-        while (collWallSetIter.hasNext()){
-            WallSet ws = collWallSetIter.next();
-            Iterator<Wall> collWallIter = ws.getWallSet().iterator();
-            while (collWallIter.hasNext()) {
-                Wall w = collWallIter.next();
-                if (Intersector.overlaps(ball.getBoundingCircle(), w.getBoundingRec())) {
-                    // TODO restart game, show particles, reset score
-                    score = 0;
-                    System.out.println("Collision");
-
-
-                    // second argument is the locaiton the for the particle image
-                    effect.load(Gdx.files.internal("particle.p"),Gdx.files.internal(""));
-                    effect.start();
-
-                    effect.setPosition(ball.getPos().x,ball.getPos().y);
-                    System.out.println(Gdx.graphics.getWidth()/2 +", " +  Gdx.graphics.getHeight()/2);
+                Iterator<Wall> wallIter = ws.getWallSet().iterator();
+                while (wallIter.hasNext()) {
+                    Wall w = wallIter.next();
+                    w.update(left);
+                    //Remove wall when out of screen
 
                 }
-
+                if (ws.getXPos() < -10 || ws.getXPos() > game.screenWidth) {
+                    wallSetIter.remove();
+                }
             }
+
+
+            if (walls.size() == 0) {
+                spawnSetOfWalls();
+            }
+
+            // TODO Make game harder by making walls go faster and reducing the holes
+
+
+            //******************
+            // collision
+            //******************
+            Iterator<WallSet> collWallSetIter = walls.iterator();
+            while (collWallSetIter.hasNext()) {
+                WallSet ws = collWallSetIter.next();
+                Iterator<Wall> collWallIter = ws.getWallSet().iterator();
+                while (collWallIter.hasNext()) {
+                    Wall w = collWallIter.next();
+                    if (Intersector.overlaps(ball.getBoundingCircle(), w.getBoundingRec())) {
+                        // TODO restart game, show particles, reset score
+                        // score = 0;
+
+
+                        // second argument is the locaiton the for the particle image
+                        effect.load(Gdx.files.internal("particle.p"), Gdx.files.internal(""));
+                        effect.start();
+
+                        effect.setPosition(ball.getPos().x, ball.getPos().y);
+                        ball.gameOver = true;
+
+                    }
+
+                }
+            }
+
+
+        } else if (gameState == GameState.PAUSE) {
+            ball.speed = 0;
+
+        } else if (gameState == GameState.GAMEOVER) {
+            // TODO gameover
         }
-
-
-
     }
 
 
-    public void spawnSetOfWalls(){
+    public void spawnSetOfWalls() {
         WallSet wallSet;
 
-        if(ball.getPos().x <= game.screenWidth/2){
+        if (ball.getPos().x <= game.screenWidth / 2) {
             float x = game.screenWidth;
             float y = 200;
 
             wallSet = new WallSet();
             for (int i = 0; i < 2; i++) {
-                wallSet.add(new Wall(game,x,y));
-                y = y + Wall.wallHeight + MathUtils.random(minHoleSize,maxHoleSize);
+                wallSet.add(new Wall(game, x, y));
+                y = y + Wall.wallHeight + MathUtils.random(minHoleSize, maxHoleSize);
                 left = true;
 
             }
-        }else {
+        } else {
             float x = 0;
             float y = 200;
 
@@ -261,6 +291,7 @@ public class GameScene extends BaseScene {
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
+        hud.resize(width, height);
 
     }
 
@@ -268,6 +299,29 @@ public class GameScene extends BaseScene {
     protected void handleBackPress() {
         super.handleBackPress();
     }
+
+    public void hardiFy() {
+        Iterator<WallSet> collWallSetIter = walls.iterator();
+        while (collWallSetIter.hasNext()) {
+            if(currentWallSpeed < maxWallSpeed){
+                currentWallSpeed += 0.002f;
+                System.out.println(currentWallSpeed);
+            }else if(maxHoleSize>80){
+                maxHoleSize -= 0.01f;
+            }
+            WallSet ws = collWallSetIter.next();
+            Iterator<Wall> collWallIter = ws.getWallSet().iterator();
+            while (collWallIter.hasNext()) {
+                Wall w = collWallIter.next();
+                w.setSpeed(currentWallSpeed);
+            }
+        }
+
+        System.out.println(maxHoleSize);
+
+
+    }
+
 }
 
 

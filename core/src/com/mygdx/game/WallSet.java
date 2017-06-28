@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 public class WallSet {
 
-    boolean canSpawn = true;
 
     private ArrayList<Wall> wallSet;
 

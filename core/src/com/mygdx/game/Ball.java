@@ -22,6 +22,7 @@ public class Ball {
     float speed = 10f;
     float current = 0;
     Vector2 out = new Vector2();
+    boolean gameOver = false;
 
     public Ball(CatmullRomSpline cm) {
         myCatmull = cm;
@@ -43,7 +44,8 @@ public class Ball {
         myCatmull.valueAt(out,current);
 
         boundingCircle.set(out.x, out.y, ball.getWidth()/2-2);
-        batch.draw(ball,out.x-ball.getHeight()/2,out.y-ball.getHeight()/2);
+        if(!gameOver)
+            batch.draw(ball,out.x-ball.getHeight()/2,out.y-ball.getHeight()/2);
     }
 
     public Vector2 getPos(){
