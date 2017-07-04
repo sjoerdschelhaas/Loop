@@ -269,8 +269,12 @@ public class GameScene extends BaseScene {
                         effect.setPosition(ball.getPos().x, ball.getPos().y);
                         if(!ball.gameOver)
                             if(game.isSound){
-                                game.prefs.putInteger("score",(int)score);
-                                hit.play();
+                                if(game.prefs.getInteger("score") < score){
+                                    game.prefs.putInteger("score",(int)score);
+                                    game.prefs.flush();
+                                    hit.play();
+                                }
+
                             }
                         ball.gameOver = true;
                         gameState = GameState.GAMEOVER;

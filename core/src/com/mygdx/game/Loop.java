@@ -44,7 +44,7 @@ public class Loop extends Game {
 
 		uiAtlas = manager.get("ui.pack",TextureAtlas.class);
 
-		prefs = Gdx.app.getPreferences("My Preferences");
+		prefs = Gdx.app.getPreferences("Preferences");
 
 
 
