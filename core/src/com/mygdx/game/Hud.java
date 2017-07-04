@@ -3,7 +3,11 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -31,8 +35,13 @@ public class Hud {
     ImageButton exitToMenu;
     ImageButton resume;
     ImageButton replay;
+    ImageButton imPause;
+
+    BitmapFont gameOverFont;
 
     private boolean isPaused;
+
+    int score;
 
     public Hud(Loop g){
         game = g;
@@ -43,17 +52,16 @@ public class Hud {
 
         stage = new Stage(viewport);
 
-        Gdx.input.setInputProcessor(stage);
 
         isPaused = false;
 
         ImageButton.ImageButtonStyle   ims = new ImageButton.ImageButtonStyle();
-        ims.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("pause.png")));
+        ims.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("pause"));
         ims.pressedOffsetY = -5;
         ims.pressedOffsetX = -5;
 
 
-        ImageButton imPause = new ImageButton(ims);
+        imPause = new ImageButton(ims);
         imPause.setPosition(40,g.screenHeight/2+250);
 
 
@@ -68,11 +76,14 @@ public class Hud {
 
         stage.addActor(imPause);
 
+        spawnGameOver();
+
     }
 
-    public void draw(){
+    public void draw(SpriteBatch batch){
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
+
     }
 
     public boolean isPaused(){
@@ -81,17 +92,17 @@ public class Hud {
 
     public void spawnPauseMenu(){
         ImageButton.ImageButtonStyle resumeStyle = new ImageButton.ImageButtonStyle();
-        resumeStyle.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("resume.png")));
+        resumeStyle.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("resume"));
         resumeStyle.pressedOffsetY = -5;
         resumeStyle.pressedOffsetX = -5;
 
         ImageButton.ImageButtonStyle exitStyle = new ImageButton.ImageButtonStyle();
-        exitStyle.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("extToMenu.png")));
+        exitStyle.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("exit"));
         exitStyle.pressedOffsetY = -5;
         exitStyle.pressedOffsetX = -5;
 
         ImageButton.ImageButtonStyle replayStyle = new ImageButton.ImageButtonStyle();
-        replayStyle.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("replay.png")));
+        replayStyle.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("replay"));
         replayStyle.pressedOffsetY = -5;
         replayStyle.pressedOffsetX = -5;
 
@@ -120,6 +131,7 @@ public class Hud {
                 game.setScreen(new MenuScene(game));
 
             }
+
         });
 
 
@@ -168,7 +180,6 @@ public class Hud {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
-                // TODO create replay stuff
                 game.setScreen(new GameScene(game));
             }
         });
@@ -193,6 +204,25 @@ public class Hud {
 
     }
 
+    void spawnGameOver(){
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("DroidSerif-Bold.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 48;
+        gameOverFont = generator.generateFont(parameter); // font size 12 pixels
+        generator.dispose(); // don't forget to dispose to avoid memory leaks!
 
 
+
+    }
+
+
+   public void drawGameOVerFont(SpriteBatch batch, int score){
+
+       gameOverFont.draw(batch, "Game Over \n" + "Score: \n" + score, game.screenWidth / 2, game.screenHeight / 2);
+   }
+
+   public void setInputProcessor(){
+       Gdx.input.setInputProcessor(stage);
+   }
 }
+

@@ -47,12 +47,15 @@ public class MenuScene extends BaseScene {
     Loop g;
 
 
+    GameScene gScene;
+
     boolean canAnim = true;
 
     public MenuScene(Loop game) {
         super(game);
 
         g = game;
+        gScene = new GameScene(game);
 
     }
 
@@ -61,7 +64,7 @@ public class MenuScene extends BaseScene {
         super.show();
         batch = new SpriteBatch();
 
-        background = new Sprite(new Texture("background.jpg"));
+        background = new Sprite(g.manager.get("background.jpg", Texture.class));
 
         stage = new Stage();
         stage.setViewport(g.viewport);
@@ -107,7 +110,7 @@ public class MenuScene extends BaseScene {
         batch.begin();
         background.draw(batch);
         fontHighScore.draw(batch, "HighScore", g.screenWidth / 2 - (textWidthHighScore / 2), g.screenHeight * 0.58f);
-        fontScore.draw(batch, "99", g.screenWidth / 2 - (textWidthScore / 2), g.screenHeight * 0.52f);
+        fontScore.draw(batch, "" + game.prefs.getInteger("score",0), g.screenWidth / 2 - (textWidthScore / 2), g.screenHeight * 0.52f);
 
         batch.end();
 
@@ -143,10 +146,10 @@ public class MenuScene extends BaseScene {
         System.out.println("Not implemented yet");
     }
     public void initButtons(){
-        Texture t = new Texture("menulogo.png");
+        TextureRegion t = game.uiAtlas.findRegion("menulogo");
         logo = new Image();
-        logo.setDrawable(new TextureRegionDrawable(new TextureRegion(t)));
-        logo.setSize(t.getWidth() * 0.75f, t.getHeight() * 0.75f);
+        logo.setDrawable(new TextureRegionDrawable(t));
+        logo.setSize(t.getRegionWidth() * 0.75f, t.getRegionHeight() * 0.75f);
         logo.setPosition(g.screenWidth * 0.5f - (logo.getWidth() / 2), 0 - logo.getHeight());
 
 
@@ -158,7 +161,7 @@ public class MenuScene extends BaseScene {
 
 
         ImageButton.ImageButtonStyle ims = new ImageButton.ImageButtonStyle();
-        ims.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("playButton.png")));
+        ims.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("playButton"));
         ims.pressedOffsetY = -5;
         ims.pressedOffsetX = -5;
 
@@ -182,13 +185,13 @@ public class MenuScene extends BaseScene {
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
                 Gdx.input.setInputProcessor(null);
-                g.setScreen(new GameScene(g));
+                g.setScreen(gScene);
 
             }
         });
 
         ImageButton.ImageButtonStyle imsExit = new ImageButton.ImageButtonStyle();
-        imsExit.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("exit.png")));
+        imsExit.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("exit"));
         imsExit.pressedOffsetY = -5;
         imsExit.pressedOffsetX = -5;
 
@@ -214,7 +217,7 @@ public class MenuScene extends BaseScene {
 
 
         ImageButton.ImageButtonStyle imsStar = new ImageButton.ImageButtonStyle();
-        imsStar.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("star.png")));
+        imsStar.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("star"));
         imsStar.pressedOffsetY = -5;
         imsStar.pressedOffsetX = -5;
 
@@ -240,11 +243,12 @@ public class MenuScene extends BaseScene {
 
 
         ImageButton.ImageButtonStyle imsSettings = new ImageButton.ImageButtonStyle();
-        imsSettings.imageUp = new TextureRegionDrawable(new TextureRegion(new Texture("settings.png")));
+        imsSettings.imageUp = new TextureRegionDrawable(game.uiAtlas.findRegion("soundOff"));
+        imsSettings.imageChecked = new TextureRegionDrawable(game.uiAtlas.findRegion("soundOn"));
         imsSettings.pressedOffsetY = -5;
         imsSettings.pressedOffsetX = -5;
 
-        ImageButton imSettings = new ImageButton(imsSettings);
+        final ImageButton imSettings = new ImageButton(imsSettings);
         imSettings.setPosition((g.screenWidth * 0.65f) - imSettings.getWidth() / 2
                 , 0);
         MoveToAction moveToSettings = new MoveToAction();
@@ -259,8 +263,13 @@ public class MenuScene extends BaseScene {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
-                System.out.println("not yet implemented");
-
+                if(game.isSound){
+                    imSettings.setChecked(true);
+                    game.isSound = false;
+                }else {
+                    imSettings.setChecked(false);
+                    game.isSound = true;
+                }
             }
         });
 
@@ -272,9 +281,25 @@ public class MenuScene extends BaseScene {
     }
 
     @Override
+    public void hide() {
+        super.hide();
+        batch.dispose();
+        stage.dispose();
+
+    }
+
+    @Override
     public void resize(int width, int height) {
         super.resize(width, height);
         g.viewport.update(width,height,true);
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        stage.dispose();
+        batch.dispose();
+
     }
 }
 

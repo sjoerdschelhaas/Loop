@@ -17,7 +17,7 @@ public class Wall {
 
     static float wallHeight;
 
-    float speed = 4f;
+    float speed = 5f;
 
 
     public Rectangle getBoundingRec(){
@@ -30,7 +30,7 @@ public class Wall {
 
     public Wall(Loop g,float x, float y){
 
-        wall = new Sprite(new Texture("verWall.png"));
+        wall = new Sprite(g.manager.get("smallerWall.png",Texture.class));
         wallHeight = wall.getHeight();
 
         wall.setPosition(x,y);
@@ -46,7 +46,7 @@ public class Wall {
         }
 
 
-     //   boundingRec.set(wall.getX(),wall.getY()-speed,wall.getWidth(),wall.getHeight());
+
         boundingRec.set(wall.getBoundingRectangle());
 
     }

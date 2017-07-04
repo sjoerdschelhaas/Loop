@@ -1,0 +1,75 @@
+
+ui.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+menulogo
+  rotate: false
+  xy: 1, 194
+  size: 750, 750
+  orig: 750, 750
+  offset: 0, 0
+  index: -1
+playButton
+  rotate: false
+  xy: 1, 104
+  size: 369, 88
+  orig: 369, 88
+  offset: 0, 0
+  index: -1
+resume
+  rotate: false
+  xy: 753, 784
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+exit
+  rotate: false
+  xy: 1, 1
+  size: 104, 101
+  orig: 104, 101
+  offset: 0, 0
+  index: -1
+extToMenu
+  rotate: false
+  xy: 753, 681
+  size: 104, 101
+  orig: 104, 101
+  offset: 0, 0
+  index: -1
+replay
+  rotate: false
+  xy: 915, 843
+  size: 104, 101
+  orig: 104, 101
+  offset: 0, 0
+  index: -1
+pause
+  rotate: false
+  xy: 107, 2
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+soundOff
+  rotate: false
+  xy: 753, 579
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+soundOn
+  rotate: false
+  xy: 209, 2
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+star
+  rotate: false
+  xy: 753, 480
+  size: 99, 97
+  orig: 99, 97
+  offset: 0, 0
+  index: -1

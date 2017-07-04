@@ -1,6 +1,8 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Audio;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -35,13 +37,15 @@ public class GameScene extends BaseScene {
     Vector3 touchPos;
     CatmullRomSpline<Vector2> myCatmull;
 
+    boolean canDrawGameOverScore = false;
+    boolean canPlayWinEffect = true;
+    float winEffectCounter = 0;
     float score = 0;
-    float deltaScore = 0;
 
     private ParticleEffect effect;
 
-    float maxHoleSize = 300;
-    float minHoleSize = 140;
+    float maxHoleSize = 250;
+    float minHoleSize = 120;
 
     float currentWallSpeed = 4;
     // if the ball is moving left
@@ -54,7 +58,7 @@ public class GameScene extends BaseScene {
 
     GameState gameState;
 
-    float maxWallSpeed = 14;
+    float maxWallSpeed = 13;
 
     FreeTypeFontGenerator generator;
     FreeTypeFontGenerator.FreeTypeFontParameter parameter;
@@ -63,6 +67,8 @@ public class GameScene extends BaseScene {
     float textWidthScore;
 
     private Hud hud;
+    Sound win = Gdx.audio.newSound(Gdx.files.internal("win.mp3"));
+    Sound hit = Gdx.audio.newSound(Gdx.files.internal("hit.mp3"));
 
 
     public enum GameState {
@@ -76,8 +82,10 @@ public class GameScene extends BaseScene {
         super(g);
         game = g;
 
-        hud = new Hud(g);
 
+        hud = new Hud(game);
+
+        setup();
     }
 
     @Override
@@ -86,18 +94,18 @@ public class GameScene extends BaseScene {
         batch = new SpriteBatch();
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        setup();
+
 
 
         touchPos = new Vector3();
 
-        background = new Sprite(new Texture("infin.jpg"));
+        background = new Sprite(game.manager.get("infin.jpg",Texture.class));
 
         walls = new ArrayList<WallSet>();
 
         effect = new ParticleEffect();
 
-        ball = new Ball(myCatmull);
+        ball = new Ball(myCatmull,game);
         spawnSetOfWalls();
 
         gameState = GameState.PLAYING;
@@ -110,6 +118,7 @@ public class GameScene extends BaseScene {
         fontScore = generator.generateFont(parameter);
         layout = new GlyphLayout(fontScore, "Score 0");
         textWidthScore = layout.width * 0.5f;
+        hud.setInputProcessor();
 
     }
 
@@ -143,7 +152,8 @@ public class GameScene extends BaseScene {
         batch.begin();
         background.draw(batch);
         fontScore.draw(batch, "Score: " + (int) score, game.screenWidth * 0.7f, game.screenHeight * 0.85f);
-
+        if(canDrawGameOverScore)
+            hud.drawGameOVerFont(batch,(int)score);
         ball.draw(batch);
 
 
@@ -163,17 +173,21 @@ public class GameScene extends BaseScene {
 
         batch.end();
 
-        hud.draw();
+        hud.draw(batch);
 
         update(delta);
     }
 
     public void update(float delta) {
 
-
+        winEffectCounter += delta;
+        if(!canPlayWinEffect && winEffectCounter > 0.5){
+            canPlayWinEffect = true;
+            winEffectCounter = 0;
+        }
         if (hud.isPaused())
             gameState = GameState.PAUSE;
-        else
+        else if(gameState != GameState.GAMEOVER)
             gameState = GameState.PLAYING;
 
 
@@ -181,6 +195,18 @@ public class GameScene extends BaseScene {
 
             hardiFy();
 
+            if(walls.size()!=0){
+                if(canPlayWinEffect){
+                    if(ball.getPos().x > walls.get(0).getXPos() - 10 && ball.getPos().x < walls.get(0).getXPos()+10){
+                        if(game.isSound){
+                            win.play();
+                        }
+                        canPlayWinEffect = false;
+                    }
+
+                }
+
+            }
             if (Gdx.input.isTouched()) {
                 touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
                 game.camera.unproject(touchPos);
@@ -241,7 +267,13 @@ public class GameScene extends BaseScene {
                         effect.start();
 
                         effect.setPosition(ball.getPos().x, ball.getPos().y);
+                        if(!ball.gameOver)
+                            if(game.isSound){
+                                game.prefs.putInteger("score",(int)score);
+                                hit.play();
+                            }
                         ball.gameOver = true;
+                        gameState = GameState.GAMEOVER;
 
                     }
 
@@ -253,7 +285,17 @@ public class GameScene extends BaseScene {
             ball.speed = 0;
 
         } else if (gameState == GameState.GAMEOVER) {
-            // TODO gameover
+            if(walls.size() != 0)
+                walls.remove(0);
+            fontScore.setColor(1,1,1,0);
+            hud.imPause.setVisible(false);
+            if(effect.isComplete()){
+                canDrawGameOverScore = true;
+                if(Gdx.input.justTouched()){
+                    startOver();
+                }
+            }
+
         }
     }
 
@@ -263,10 +305,10 @@ public class GameScene extends BaseScene {
 
         if (ball.getPos().x <= game.screenWidth / 2) {
             float x = game.screenWidth;
-            float y = 200;
+            float y = MathUtils.random(0,200);
 
             wallSet = new WallSet();
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 3; i++) {
                 wallSet.add(new Wall(game, x, y));
                 y = y + Wall.wallHeight + MathUtils.random(minHoleSize, maxHoleSize);
                 left = true;
@@ -274,10 +316,10 @@ public class GameScene extends BaseScene {
             }
         } else {
             float x = 0;
-            float y = 200;
+            float y = MathUtils.random(0,200);
 
             wallSet = new WallSet();
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 3; i++) {
                 wallSet.add(new Wall(game, x, y));
                 y = y + Wall.wallHeight + MathUtils.random(minHoleSize, maxHoleSize);
                 left = false;
@@ -304,10 +346,13 @@ public class GameScene extends BaseScene {
         Iterator<WallSet> collWallSetIter = walls.iterator();
         while (collWallSetIter.hasNext()) {
             if(currentWallSpeed < maxWallSpeed){
-                currentWallSpeed += 0.002f;
+                currentWallSpeed += 0.0022f;
                 System.out.println(currentWallSpeed);
-            }else if(maxHoleSize>80){
-                maxHoleSize -= 0.01f;
+            }else if(maxHoleSize>100){
+                currentWallSpeed += 0.0001;
+                maxHoleSize -= 0.02f;
+                System.out.println(currentWallSpeed);
+                System.out.println(maxHoleSize);
             }
             WallSet ws = collWallSetIter.next();
             Iterator<Wall> collWallIter = ws.getWallSet().iterator();
@@ -320,6 +365,15 @@ public class GameScene extends BaseScene {
         System.out.println(maxHoleSize);
 
 
+    }
+
+    public void startOver(){
+        gameState = GameState.PLAYING;
+        ball = new Ball(myCatmull,game);
+        currentWallSpeed = 5;
+        canDrawGameOverScore = false;
+        hud.imPause.setVisible(true);
+        fontScore.setColor(0,0,0,1);
     }
 
 }

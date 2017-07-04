@@ -24,9 +24,9 @@ public class Ball {
     Vector2 out = new Vector2();
     boolean gameOver = false;
 
-    public Ball(CatmullRomSpline cm) {
+    public Ball(CatmullRomSpline cm,Loop g) {
         myCatmull = cm;
-        ball = new Sprite(new Texture("ball.png"));
+        ball = new Sprite(g.manager.get("ball.png",Texture.class));
         boundingCircle = new Circle();
     }
 

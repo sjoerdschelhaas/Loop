@@ -1,16 +1,28 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class Loop extends Game {
 
 	OrthographicCamera camera;
+
 	public static final int screenWidth = 1280;
 	public static final int screenHeight = 960;
+    TextureAtlas uiAtlas;
+    AssetManager manager = new AssetManager();
 
+	boolean isSound = true;
+
+	Preferences prefs;
 	Viewport viewport;
 
 	@Override
@@ -19,6 +31,22 @@ public class Loop extends Game {
 		camera = new OrthographicCamera();
 		camera.position.set(screenWidth/2,screenHeight/2,0);
 		viewport = new FillViewport(screenWidth,screenHeight,camera);
+
+        manager.load("ui.pack",TextureAtlas.class);
+		manager.load("background.jpg", Texture.class);
+        manager.load("infin.jpg",Texture.class);
+		manager.load("smallerWall.png",Texture.class);
+		manager.load("ball.png",Texture.class);
+		manager.load("hit.mp3", Sound.class);
+		manager.load("win.mp3", Sound.class);
+
+        manager.finishLoading();
+
+		uiAtlas = manager.get("ui.pack",TextureAtlas.class);
+
+		prefs = Gdx.app.getPreferences("My Preferences");
+
+
 
 		setScreen(new MenuScene(this));
 	}
