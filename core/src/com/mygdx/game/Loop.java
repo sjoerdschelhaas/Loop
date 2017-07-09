@@ -20,6 +20,8 @@ public class Loop extends Game {
     TextureAtlas uiAtlas;
     AssetManager manager = new AssetManager();
 
+	boolean isFirstTime;
+
 	boolean isSound = true;
 
 	Preferences prefs;
@@ -32,6 +34,10 @@ public class Loop extends Game {
 		camera.position.set(screenWidth/2,screenHeight/2,0);
 		viewport = new FillViewport(screenWidth,screenHeight,camera);
 
+		prefs = Gdx.app.getPreferences("Preferences");
+
+		isFirstTime = prefs.getBoolean("first",true);
+
         manager.load("ui.pack",TextureAtlas.class);
 		manager.load("background.jpg", Texture.class);
         manager.load("infin.jpg",Texture.class);
@@ -40,11 +46,15 @@ public class Loop extends Game {
 		manager.load("hit.mp3", Sound.class);
 		manager.load("win.mp3", Sound.class);
 
+		if(isFirstTime){
+			manager.load("leftTut.png",Texture.class);
+			manager.load("rightTut.png",Texture.class);
+		}
+
         manager.finishLoading();
 
 		uiAtlas = manager.get("ui.pack",TextureAtlas.class);
 
-		prefs = Gdx.app.getPreferences("Preferences");
 
 
 

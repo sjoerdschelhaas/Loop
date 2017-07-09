@@ -185,6 +185,7 @@ public class MenuScene extends BaseScene {
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
                 Gdx.input.setInputProcessor(null);
+                game.isFirstTime = game.prefs.getBoolean("first",true);
                 g.setScreen(gScene);
 
             }

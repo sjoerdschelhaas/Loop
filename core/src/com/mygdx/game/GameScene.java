@@ -4,6 +4,7 @@ import com.badlogic.gdx.Audio;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -70,11 +71,16 @@ public class GameScene extends BaseScene {
     Sound win = Gdx.audio.newSound(Gdx.files.internal("win.mp3"));
     Sound hit = Gdx.audio.newSound(Gdx.files.internal("hit.mp3"));
 
+    FPSLogger fps = new FPSLogger();
+
+    Tutorial tut;
+
 
     public enum GameState {
         PLAYING,
         PAUSE,
-        GAMEOVER
+        GAMEOVER,
+        TUTORIAL
     }
 
 
@@ -83,7 +89,7 @@ public class GameScene extends BaseScene {
         game = g;
 
 
-        hud = new Hud(game);
+        hud = new Hud(game,this);
 
         setup();
     }
@@ -95,8 +101,6 @@ public class GameScene extends BaseScene {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-
-
         touchPos = new Vector3();
 
         background = new Sprite(game.manager.get("infin.jpg",Texture.class));
@@ -104,11 +108,6 @@ public class GameScene extends BaseScene {
         walls = new ArrayList<WallSet>();
 
         effect = new ParticleEffect();
-
-        ball = new Ball(myCatmull,game);
-        spawnSetOfWalls();
-
-        gameState = GameState.PLAYING;
 
 
         generator = new FreeTypeFontGenerator(Gdx.files.internal("DroidSerif-Bold.ttf"));
@@ -120,6 +119,15 @@ public class GameScene extends BaseScene {
         textWidthScore = layout.width * 0.5f;
         hud.setInputProcessor();
 
+        if(game.isFirstTime){
+            gameState = GameState.TUTORIAL;
+            hud.imPause.setVisible(false);
+        }else{
+            gameState = GameState.PLAYING;
+            ball = new Ball(myCatmull,game);
+            spawnSetOfWalls(ball);
+
+        }
     }
 
     public void setup() {
@@ -147,38 +155,48 @@ public class GameScene extends BaseScene {
     public void render(float delta) {
         super.render(delta);
 
+        fps.log();
         batch.setProjectionMatrix(game.camera.combined);
 
         batch.begin();
         background.draw(batch);
-        fontScore.draw(batch, "Score: " + (int) score, game.screenWidth * 0.7f, game.screenHeight * 0.85f);
-        if(canDrawGameOverScore)
-            hud.drawGameOVerFont(batch,(int)score);
-        ball.draw(batch);
-
-
-        Iterator<WallSet> wallSetIter = walls.iterator();
-        while (wallSetIter.hasNext()) {
-            WallSet ws = wallSetIter.next();
-            Iterator<Wall> wallIter = ws.getWallSet().iterator();
-            while (wallIter.hasNext()) {
-                Wall w = wallIter.next();
-                w.draw(batch);
-
+        if(gameState == GameState.TUTORIAL){
+            if(tut != null){
+                background.draw(batch);
+                tut.draw(batch,delta);
             }
+
+        }else {
+            background.draw(batch);
+            fontScore.draw(batch, "Score: " + (int) score, game.screenWidth * 0.7f, game.screenHeight * 0.85f);
+            if (canDrawGameOverScore)
+                hud.drawGameOVerFont(batch, (int) score);
+            ball.draw(batch);
+
+
+            Iterator<WallSet> wallSetIter = walls.iterator();
+            while (wallSetIter.hasNext()) {
+                WallSet ws = wallSetIter.next();
+                Iterator<Wall> wallIter = ws.getWallSet().iterator();
+                while (wallIter.hasNext()) {
+                    Wall w = wallIter.next();
+                    w.draw(batch);
+
+                }
+            }
+
+
+            effect.draw(batch, delta);
         }
+            batch.end();
 
-
-        effect.draw(batch, delta);
-
-        batch.end();
-
-        hud.draw(batch);
+            hud.draw(batch);
 
         update(delta);
     }
 
     public void update(float delta) {
+
 
         winEffectCounter += delta;
         if(!canPlayWinEffect && winEffectCounter > 0.5){
@@ -187,7 +205,7 @@ public class GameScene extends BaseScene {
         }
         if (hud.isPaused())
             gameState = GameState.PAUSE;
-        else if(gameState != GameState.GAMEOVER)
+        else if(gameState != GameState.GAMEOVER && gameState != GameState.TUTORIAL)
             gameState = GameState.PLAYING;
 
 
@@ -207,7 +225,7 @@ public class GameScene extends BaseScene {
                 }
 
             }
-            if (Gdx.input.isTouched()) {
+            if (Gdx.input.isTouched(0)) {
                 touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
                 game.camera.unproject(touchPos);
 
@@ -242,7 +260,7 @@ public class GameScene extends BaseScene {
 
 
             if (walls.size() == 0) {
-                spawnSetOfWalls();
+                spawnSetOfWalls(ball);
             }
 
             // TODO Make game harder by making walls go faster and reducing the holes
@@ -289,8 +307,6 @@ public class GameScene extends BaseScene {
             ball.speed = 0;
 
         } else if (gameState == GameState.GAMEOVER) {
-            if(walls.size() != 0)
-                walls.remove(0);
             fontScore.setColor(1,1,1,0);
             hud.imPause.setVisible(false);
             if(effect.isComplete()){
@@ -299,12 +315,24 @@ public class GameScene extends BaseScene {
                     startOver();
                 }
             }
+        }
+        else if (gameState == GameState.TUTORIAL){
+            if(tut == null) {
+                tut = new Tutorial(game,this,myCatmull);
+            }
+            if(tut.done){
+                gameState = gameState.PLAYING;
+                startOver();
+                hud.imPause.setVisible(true);
+                game.prefs.putBoolean("first",false);
+                game.prefs.flush();
+            }
 
         }
     }
 
 
-    public void spawnSetOfWalls() {
+    public void spawnSetOfWalls(Ball ball) {
         WallSet wallSet;
 
         if (ball.getPos().x <= game.screenWidth / 2) {
@@ -378,6 +406,10 @@ public class GameScene extends BaseScene {
         canDrawGameOverScore = false;
         hud.imPause.setVisible(true);
         fontScore.setColor(0,0,0,1);
+        score = 0;
+        if(walls.size() != 0)
+            walls.remove(0);
+
     }
 
 }

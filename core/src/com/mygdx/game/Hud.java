@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -39,13 +40,15 @@ public class Hud {
 
     BitmapFont gameOverFont;
 
+    GameScene gameScene;
     private boolean isPaused;
 
     int score;
 
-    public Hud(Loop g){
+    public Hud(Loop g,GameScene gameScene){
         game = g;
 
+        this.gameScene = gameScene;
 
         hudCam = new OrthographicCamera(game.screenWidth,game.screenHeight);
         viewport = new FillViewport(game.screenWidth,game.screenHeight,hudCam);
@@ -69,8 +72,10 @@ public class Hud {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
+                if(!isPaused)
+                    spawnPauseMenu();
                 isPaused = true;
-                spawnPauseMenu();
+
             }
         });
 
@@ -180,7 +185,9 @@ public class Hud {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
-                game.setScreen(new GameScene(game));
+                gameScene.startOver();
+                removePauseMenu();
+                isPaused = false;
             }
         });
 
@@ -208,6 +215,7 @@ public class Hud {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("DroidSerif-Bold.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = 48;
+        parameter.color = Color.BLACK;
         gameOverFont = generator.generateFont(parameter); // font size 12 pixels
         generator.dispose(); // don't forget to dispose to avoid memory leaks!
 
@@ -218,7 +226,7 @@ public class Hud {
 
    public void drawGameOVerFont(SpriteBatch batch, int score){
 
-       gameOverFont.draw(batch, "Game Over \n" + "Score: \n" + score, game.screenWidth / 2, game.screenHeight / 2);
+       gameOverFont.draw(batch, "Game Over \n" + "Score: \n" + score, game.screenWidth *0.4f, game.screenHeight / 2);
    }
 
    public void setInputProcessor(){

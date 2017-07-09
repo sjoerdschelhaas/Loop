@@ -5,71 +5,85 @@ filter: Nearest,Nearest
 repeat: none
 menulogo
   rotate: false
-  xy: 1, 194
+  xy: 1, 254
   size: 750, 750
   orig: 750, 750
   offset: 0, 0
   index: -1
 playButton
   rotate: false
-  xy: 1, 104
+  xy: 1, 164
   size: 369, 88
   orig: 369, 88
   offset: 0, 0
   index: -1
 resume
   rotate: false
-  xy: 753, 784
+  xy: 753, 844
   size: 160, 160
   orig: 160, 160
   offset: 0, 0
   index: -1
 exit
   rotate: false
-  xy: 1, 1
-  size: 104, 101
-  orig: 104, 101
+  xy: 1, 62
+  size: 100, 100
+  orig: 100, 100
   offset: 0, 0
   index: -1
 extToMenu
   rotate: false
-  xy: 753, 681
-  size: 104, 101
-  orig: 104, 101
-  offset: 0, 0
-  index: -1
-replay
-  rotate: false
-  xy: 915, 843
-  size: 104, 101
-  orig: 104, 101
+  xy: 753, 742
+  size: 100, 100
+  orig: 100, 100
   offset: 0, 0
   index: -1
 pause
   rotate: false
-  xy: 107, 2
+  xy: 915, 904
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+replay
+  rotate: false
+  xy: 103, 62
   size: 100, 100
   orig: 100, 100
   offset: 0, 0
   index: -1
 soundOff
   rotate: false
-  xy: 753, 579
+  xy: 753, 640
   size: 100, 100
   orig: 100, 100
   offset: 0, 0
   index: -1
 soundOn
   rotate: false
-  xy: 209, 2
+  xy: 205, 62
   size: 100, 100
   orig: 100, 100
   offset: 0, 0
   index: -1
 star
   rotate: false
-  xy: 753, 480
-  size: 99, 97
-  orig: 99, 97
+  xy: 753, 538
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+tap
+  rotate: false
+  xy: 372, 193
+  size: 59, 59
+  orig: 59, 59
+  offset: 0, 0
+  index: -1
+tapTick
+  rotate: false
+  xy: 1, 1
+  size: 59, 59
+  orig: 59, 59
   offset: 0, 0
   index: -1
