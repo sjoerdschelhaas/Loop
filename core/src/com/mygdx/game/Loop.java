@@ -22,10 +22,15 @@ public class Loop extends Game {
 
 	boolean isFirstTime;
 
+	Rate rate;
 	boolean isSound = true;
 
 	Preferences prefs;
 	Viewport viewport;
+
+	public Loop(Rate r){
+		this.rate = r;
+	}
 
 	@Override
 	public void create () {

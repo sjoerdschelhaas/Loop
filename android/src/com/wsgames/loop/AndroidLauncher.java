@@ -1,23 +1,21 @@
-package com.mygdx.game;
+package com.wsgames.loop;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.google.ads.mediation.admob.AdMobAdapter;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
+import com.mygdx.game.*;
 
-public class AndroidLauncher extends AndroidApplication implements AdHandler{
+public class AndroidLauncher extends AndroidApplication implements AdHandler {
 	private static String TAG = "AndroidLauncher";
 	private final int SHOW_ADS = 1;
 	private final int HIDE_ADS = 0;
@@ -46,12 +44,15 @@ public class AndroidLauncher extends AndroidApplication implements AdHandler{
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		RateHelper.setContext(getApplicationContext());
+
 		RelativeLayout layout = new RelativeLayout(this);
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 		config.useImmersiveMode = true;
 
 
-		View gameView = initializeForView(new Loop(),config);
+		View gameView = initializeForView(new Loop(new Rate(new RateHelper() {
+		})),config);
 		layout.addView(gameView);
 
 		adView = new AdView(this);
